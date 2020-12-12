@@ -553,6 +553,34 @@ def dump_qso_comparison(test_qsos, reference_qsos, compare_critical):
         json.dump(reference_only, cfd, indent=4, sort_keys=True)
 
 
+def setup_logging(args):
+    numeric_level = getattr(logging, args.log_level.upper(), None)
+    if not isinstance(numeric_level, int):
+        raise ValueError("Invalid log-level: {}".format(args.log_level))
+    logging.basicConfig(format='%(levelname)s: %(message)s', level=numeric_level)
+
+def process_adifs(agrs):
+    qsos, malformed = read_adif_files(args.input)
+    qsos = merge_qsos(qsos, args.merge_window)
+
+    if args.compare:
+        reference_qsos, _reference_malformed = read_adif_files([args.compare])
+        dump_qso_comparison(qsos, reference_qsos, args.compare_critical)
+        return
+
+    if args.problems:
+        dump_problems(qsos, malformed, args.problems)
+
+    if args.output:
+        # ADIF files are supposed to be ascii, not unicode, unfortunately.
+        with open(args.output, "w", encoding=ADIF_ENCODING) as adiffile:
+            adif_write(adiffile, qsos, args.minimal)
+
+    if args.wsjtx_log:
+        with open(args.wsjtx_log, "w", encoding=ADIF_ENCODING) as csvfile:
+            csv_write(csvfile, qsos)
+
+
 def main():
     """
     Load ADIF files, clean each qso individually produce output
@@ -582,30 +610,8 @@ def main():
                         help="Input file list")
     args = parser.parse_args()
 
-    numeric_level = getattr(logging, args.log_level.upper(), None)
-    if not isinstance(numeric_level, int):
-        raise ValueError("Invalid log-level: {}".format(args.log_level))
-    logging.basicConfig(format='%(levelname)s: %(message)s', level=numeric_level)
-
-    qsos, malformed = read_adif_files(args.input)
-    qsos = merge_qsos(qsos, args.merge_window)
-
-    if args.compare:
-        reference_qsos, _reference_malformed = read_adif_files([args.compare])
-        dump_qso_comparison(qsos, reference_qsos, args.compare_critical)
-        return
-
-    if args.problems:
-        dump_problems(qsos, malformed, args.problems)
-
-    if args.output:
-        # ADIF files are supposed to be ascii, not unicode, unfortunately.
-        with open(args.output, "w", encoding=ADIF_ENCODING) as adiffile:
-            adif_write(adiffile, qsos, args.minimal)
-
-    if args.wsjtx_log:
-        with open(args.wsjtx_log, "w", encoding=ADIF_ENCODING) as csvfile:
-            csv_write(csvfile, qsos)
+    setup_logging(args)
+    process_adifs(args)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>{{ title }}</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+</head>
+<body>
+    <h1>{{ title }}</h1>
+    <hr>
+    <div>
+        <form action="/merge" method="post" enctype="multipart/form-data">
+            <p>
+              <label>ADIF File 1:</label><br>
+              <input type="file" name="file1">
+              (*.adi / *.adif)
+            </p>
+            <p>
+                <label>ADIF File 2:</label><br>
+                <input type="file" name="file2">
+                (*.adi / *.adif)
+              </p>
+            <p>
+              <label>
+                <input type="checkbox" value="option1">
+                Option 1
+              </label>
+            </p>
+            <p>
+                <label>
+                  <input type="checkbox" value="option2">
+                  Option 2
+                </label>
+              </p>
+            <p>
+              <button>Merge!</button>
+            </p>
+          </form>
+    </div>
+
+    <div>
+        <hr>
+        <p><strong>Note: This is an early alpha version. Always backup your ADIF files before uploading them -- bad things might happen :-)</strong></p>
+        <p>
+            This service wraps the <a href="https://github.com/pleasantone/adif_merge">"adif_merge.py"</a> command line tool, which is developed by Paul Traina. This service wrapper has been developed by <a href="https://www.qrz.com/db/DL1PEU">DL1PEU</a>.
+        </p>
+    </div>
+
+</body>
+</html>

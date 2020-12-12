@@ -23,7 +23,8 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     entry_points={
         "console_scripts": [
-            "adif_merge=adif_merge:main"
+            "adif_merge=adif_merge:main",
+            "adif_merge_svc=adif_merge.service:main"
         ]
     },
     install_requires=[

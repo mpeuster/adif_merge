@@ -74,6 +74,37 @@ If you disagree with choices I've made in preference when attempting
 to merge, such as frequency harmonization or deferring to LoTW when
 there is a conflict for some fields, please let me know.
 
+## Web Service Mode
+
+This fork wraps the original [adif_merge.py](https://github.com/pleasantone/adif_merge) porject into a simple
+web service to which you can upload ADIF files for merging. Goal is to simplfiy the use of the tool for non-experts.
+This extension was implemented by [DL1PEU](https://www.qrz.com/db/DL1PEU).
+
+Run service locally:
+
+```bash
+# help
+adif_merge_svc -h                                                                                                                                                                       (venv) 
+usage: adif_merge_svc [-h] [--port PORT] [--addr ADDR] [--log-level LOG_LEVEL] [--debug]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --port PORT           Port to listen (default: 8081)
+  --addr ADDR           Host addr. to listen on (default: 0.0.0.0)
+  --log-level LOG_LEVEL
+                        Log level for debugging (default: info)
+  --debug               Run server in dubgging mode (default: False)
+
+# development
+adif_merge_svc  --debug
+```
+
+Deploy as Docker container:
+
+```bash
+# TODO
+```
+
 
 ## Copyright & License
 
