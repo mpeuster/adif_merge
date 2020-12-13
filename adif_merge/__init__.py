@@ -33,6 +33,7 @@ import logging
 import math
 import re
 import os
+import sys
 import string
 from datetime import datetime, timedelta
 
@@ -559,7 +560,7 @@ def setup_logging(args):
         raise ValueError("Invalid log-level: {}".format(args.log_level))
     logging.basicConfig(format='%(levelname)s: %(message)s', level=numeric_level)
 
-def process_adifs(agrs):
+def process_adifs(args):
     qsos, malformed = read_adif_files(args.input)
     qsos = merge_qsos(qsos, args.merge_window)
 
@@ -581,10 +582,7 @@ def process_adifs(agrs):
             csv_write(csvfile, qsos)
 
 
-def main():
-    """
-    Load ADIF files, clean each qso individually produce output
-    """
+def parse_args(inputs=None):
     parser = argparse.ArgumentParser(
         description="Merge ADIF files",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -608,8 +606,16 @@ def main():
                         version="%(prog)s {version}".format(version=__VERSION__))
     parser.add_argument('input', type=str, nargs="+",
                         help="Input file list")
-    args = parser.parse_args()
+    if inputs is None:
+        inputs = sys.argv[1:]
+    return parser.parse_args(inputs)
 
+
+def main():
+    """
+    Load ADIF files, clean each qso individually produce output
+    """
+    args = parse_args()
     setup_logging(args)
     process_adifs(args)
 

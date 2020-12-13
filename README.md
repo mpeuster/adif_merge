@@ -96,13 +96,17 @@ optional arguments:
   --debug               Run server in dubgging mode (default: False)
 
 # development
-adif_merge_svc  --debug
+adif_merge_svc --debug --log-level DEBUG   
 ```
 
 Deploy as Docker container:
 
 ```bash
-# TODO
+# build container
+docker build -t adif_merge_svc .
+
+# run container
+docker run -p 8081:8081 adif_merge_svc
 ```
 
 

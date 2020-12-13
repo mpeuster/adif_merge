@@ -2,13 +2,15 @@ import os
 import argparse
 import logging
 import uuid
+import time
+import shutil
 from flask import Flask, render_template, request, session
 from werkzeug.utils import secure_filename
-from adif_merge import setup_logging
-from adif_merge import process_adifs
+from apscheduler.schedulers.background import BackgroundScheduler
+from adif_merge import setup_logging, process_adifs, parse_args
 
 
-UPLOAD_FOLDER = os.getenv("AMS_UPLOAD_FOLDER", default="/tmp/adif_merge")
+UPLOAD_FOLDER = os.getenv("AMS_UPLOAD_FOLDER", default="adif_merge/static")
 ALLOWED_EXTENSIONS = {"ADI", "adi", "ADIF", "adif"}
 
 
@@ -57,13 +59,56 @@ def merge():
                 logging.error ("Could not write: {}".format(fp))
                 return "Could not store: {}".format(filename), 501
 
-    # TODO: check options
+    # check options
+    try:
+        opt_time_window = int(request.form.get("time_window", 115))
+        opt_wsjtx_log = bool(request.form.get("option_wsjtx_log", False))
+        opt_problems = bool(request.form.get("option_problems", False))
+        opt_minimal = bool(request.form.get("option_minimal", False))
+    except:
+        return "bad inputs", 400
 
-    # TODO: call merge
+    # gen. args & call merge
+    arg_list = list()
+    if opt_minimal:
+        arg_list.append("--minimal")
+    if opt_problems:
+        arg_list.append("--problems")
+        arg_list.append("{}".format(os.path.join(session_path, "problems.json")))
+    if opt_wsjtx_log:
+        arg_list.append("--wsjtx-log")
+        arg_list.append("{}".format(os.path.join(session_path, "wsjtx.log")))
+    arg_list.append("--merge-window")
+    arg_list.append("{}".format(opt_time_window))
+    arg_list.append("--output")
+    arg_list.append("{}".format(os.path.join(session_path, "merged.adi")))
+    arg_list.extend(file_paths)
+    logging.debug("Arg list: {}".format(arg_list))
+    args = parse_args(arg_list)
 
-    # TODO: generate result
+    # to the work ...
+    logging.debug("Triggering adif_merge with: {}".format(vars(args)))
+    process_adifs(args)
+    logging.debug("Done! Output: {}".format(args.output))
 
-    return "Done: {}".format(session["sid"])
+    # generate result
+    return render_template(
+        "result.html",
+        title=os.getenv("AMS_TITLE", default="ADIF Merge Service"),
+        sid = session["sid"],
+        output_file_name = os.path.basename(args.output),
+        problems_file_name = os.path.basename(args.problems) if args.problems and os.path.exists(args.problems) else "",
+        wsjtx_log_file_name = os.path.basename(args.wsjtx_log) if args.wsjtx_log else "",
+        )
+
+
+def cleanup():
+    for f in os.listdir(UPLOAD_FOLDER):
+        path = os.path.join(UPLOAD_FOLDER, f)
+        if os.path.isdir(path):
+            if (time.time() - os.stat(path).st_mtime) > 3600:
+                logging.info("Cleanup: Removing {}".format(path))
+                shutil.rmtree(path)
 
 
 def main():
@@ -87,4 +132,9 @@ def main():
             os.mkdir(UPLOAD_FOLDER)
         except OSError:
             logging.error ("Upload folder could not be created: {}".format(UPLOAD_FOLDER))
+    # TODO: create cleanup job
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(cleanup, 'interval', minutes=120)
+    scheduler.start()
+    # start the server
     app.run(host=args.addr, port=args.port, debug=args.debug)
