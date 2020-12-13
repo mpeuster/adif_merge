@@ -44,12 +44,12 @@ def merge():
 
     # upload and store inputs
     file_paths = list()
-    for f in ["file1", "file2"]:
+    for i, f in enumerate(["file1", "file2"]):
         file = request.files[f]
         if file.filename == "":
             return "bad input, no files selected", 400
         if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
+            filename = "{:02d}__{}".format(i, secure_filename(file.filename))
             fp = os.path.join(session_path, filename)
             try:
                 file.save(fp)
