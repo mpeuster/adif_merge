@@ -15,6 +15,7 @@ ALLOWED_EXTENSIONS = {"ADI", "adi", "ADIF", "adif"}
 
 
 app = Flask(__name__)
+app.config['MAX_CONTENT_LENGTH'] = 64 * 1024 * 1024  # 64 MB
 app.secret_key = os.getenv("AMS_SECRET_KEY", default=b"abcdefghijklmn")
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
